@@ -63,8 +63,7 @@ Column {
 
     function switchToNext() {
         var nextScreen = currentScreen + 1;
-        if (nextScreen > 6) nextScreen = 1;
-        //console.log("Switch to next screen: " + nextScreen);
+        if (nextScreen > totalScreens) nextScreen = 1;
         switchToScreen(nextScreen);
     }
 
