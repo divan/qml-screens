@@ -28,18 +28,34 @@ Rectangle {
         anchors.fill: parent
         property int startX
         property int startY
+        property int dragDirection
         onPressed: {
             if (mouse.button == Qt.LeftButton)
             {
                startX = mouse.x;
                startY = mouse.y;
             }
+            dragDirection = 0;
         }
-        onReleased: {
+        onPositionChanged: {
             var swipeX = mouse.x - startX;
             var swipeY = mouse.y - startY;
-            //console.log("swipeX = " + swipeX);
-            //console.log("swipeY = " + swipeY);
+            console.log("Mouse -> " + swipeX + ", " + swipeY);
+
+            var absX = Math.abs(swipeX);
+            var absY = Math.abs(swipeY);
+            if (dragDirection == 0 && (absX > 10 || absY > 10))
+            {
+                if (absX > absY)
+                    dragDirection = 1;
+                else 
+                    dragDirection = 2;
+            }
+
+            if (dragDirection == 1)
+                screen.x = swipeX;
+            else if (dragDirection == 2)
+                screen.y = swipeY;
 
             if (Math.abs(swipeX) < 50 && swipeY > 100)
             {
@@ -58,19 +74,22 @@ Rectangle {
             if (swipeX < -100 && Math.abs(swipeY) < 50)
             {
                 // swipe right
-                console.log("SWIPE RIGHT DETECTED");
+                //console.log("SWIPE RIGHT DETECTED");
                 screen.parent.parent.switched(3);
             }
             else
             if (swipeX > 100 && Math.abs(swipeY) < 50)
             {
                 // swipe left
-                console.log("SWIPE LEFT DETECTED");
+                //console.log("SWIPE LEFT DETECTED");
                 screen.parent.parent.switched(4);
             }
         }
-
-        // TODO: pass mouse events to parents
+        onReleased: {
+            screen.x = 0;
+            screen.y = 0;
+            dragDirection = 0;
+        }
     }
 
     states: [
