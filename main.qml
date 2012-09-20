@@ -7,7 +7,6 @@ ScreensGrid {
     ScreensRow {
         ScreenItem {
             name: "1"
-            state: "SHOWN"
         }
         ScreenItem {
             name: "2"

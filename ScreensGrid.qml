@@ -3,6 +3,7 @@ import QtQuick 1.0
 
 Column {
     id: grid
+    anchors.fill: parent
     property int currentScreen: 1
     property int rowsCount: 0
     property int colsCount: 0
@@ -31,8 +32,77 @@ Column {
     onSwitched: {
         switchScreen(direction);
     }
+    /*
+    MouseArea {
+        property int startX
+        property int startY
+        property int dragDirection
+        onPressed: {
+            if (mouse.button == Qt.LeftButton)
+            {
+               startX = mouse.x;
+               startY = mouse.y;
+            }
+            dragDirection = 0;
+        }
+        onPositionChanged: {
+            var swipeX = mouse.x - startX;
+            var swipeY = mouse.y - startY;
+            console.log("Mouse -> " + swipeX + ", " + swipeY);
+
+            var absX = Math.abs(swipeX);
+            var absY = Math.abs(swipeY);
+            if (dragDirection == 0 && (absX > 10 || absY > 10))
+            {
+                if (absX > absY)
+                    dragDirection = 1;
+                else 
+                    dragDirection = 2;
+            }
+
+            if (dragDirection == 1)
+                screen.x = swipeX;
+            else if (dragDirection == 2)
+                screen.y = swipeY;
+
+            if (Math.abs(swipeX) < 50 && swipeY > 100)
+            {
+                // swipe up
+                //console.log("SWIPE UP DETECTED");
+                screen.parent.parent.switched(1);
+            }
+            else
+            if (Math.abs(swipeX) < 50 && swipeY < -100)
+            {
+                // swipe down
+                //console.log("SWIPE DOWN DETECTED");
+                screen.parent.parent.switched(2);
+            }
+            else
+            if (swipeX < -100 && Math.abs(swipeY) < 50)
+            {
+                // swipe right
+                //console.log("SWIPE RIGHT DETECTED");
+                screen.parent.parent.switched(3);
+            }
+            else
+            if (swipeX > 100 && Math.abs(swipeY) < 50)
+            {
+                // swipe left
+                //console.log("SWIPE LEFT DETECTED");
+                screen.parent.parent.switched(4);
+            }
+        }
+        onReleased: {
+            screen.x = 0;
+            screen.y = 0;
+            dragDirection = 0;
+        }
+    }
+    */
 
     function switchScreen(direction) {
+        console.log("Switching...");
         switch(direction) {
         case 1:
             var row = getCurrentRow() - 1;
@@ -53,15 +123,10 @@ Column {
         default:
         }
         var screenNum = (row-1)*colsCount + col;
-        //console.log("Switch -> " + row + " / " + col + " = " + screenNum);
+        console.log("Switch -> " + row + "/" + col + " = " + currentScreen + "->" + screenNum);
         if (row == 0 || col == 0 || row > rowsCount || col > colsCount)
             return;
-        //console.log(currentScreen);
-        var currentScreenObj = grid.children[getCurrentRow()-1].children[getCurrentCol()-1];
-        var newScreenObj = grid.children[row-1].children[col-1];
         switchToScreen(screenNum);
-        currentScreenObj.hide(direction);
-        newScreenObj.show(direction);
     }
 
     function switchToNext() {
@@ -73,39 +138,11 @@ Column {
 
     function switchToScreen(screen) {
         currentScreen = screen;
-        for (var i = 0; i < grid.children.length; ++i)
-        {
-            var row = grid.children[i];
-
-            for (var j = 0; j < row.children.length; ++j)
-            {
-                var screenObj = row.children[j];
-                var screenNum = i * colsCount + j + 1;
-
-                if (screenNum != screen)
-                {
-                    //console.log(" " + screenNum + " != " + screen + " - Hiding Screen");
-                    screenObj.state = "HIDDEN";
-                }
-                else
-                {
-                    //console.log(" " + screenNum + " == " + screen + " - Showing Screen");
-                    screenObj.state = "SHOWN";
-                }
-            }
-            // check whether row should be hidden
-            //console.log(screen + " >= " + (i*colsCount+1) + " && " + screen + " <= " + (i+1)*colsCount)
-            if ((screen >= (i*colsCount+1)) && (screen <= (i+1)*colsCount))
-            {
-                //console.log("Showing row");
-                row.state = "SHOWN";
-            }
-            else
-            {
-                //console.log("Hiding row");
-                row.state = "HIDDEN";
-            }
-        }
+        var newX = -((screen - 1) % colsCount) * grid.width;
+        var newY = -(Math.floor((currentScreen-1) / colsCount)) * grid.height;
+        //console.log("newXY-> " + newX + ", " + newY);
+        grid.x = newX;
+        grid.y = newY;
     }
 
     // Return row of currentScreen
@@ -120,9 +157,17 @@ Column {
         return (currentScreen - 1) % colsCount + 1;
     }
 
+    Behavior on y {
+        NumberAnimation { duration: 300; easing.type: Easing.OutBack }
+    }
+    Behavior on x {
+        NumberAnimation { duration: 300; easing.type: Easing.OutBack }
+    }
+
     Component.onCompleted: {
         rowsCount = grid.children.length;
         colsCount = grid.children[0].children.length;
         totalScreens = rowsCount * colsCount;
+        console.log("INIT: rows: " + rowsCount + ", cols: " + colsCount + ", total: " + totalScreens);
     }
 }
